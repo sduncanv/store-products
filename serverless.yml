@@ -54,17 +54,15 @@ provider:
   runtime: python3.9
   layers:
     - Ref: PythonRequirementsLambdaLayer
-  iam:
-    role:
-      statements:
-        - Effect: "Allow"
-          Action:
-            - s3:PutObject
-            - s3:GetObject
-            - cognito-idp:AdminSetUserPassword
-            - cognito-idp:AdminUpdateUserAttributes
-            - cognito-idp:GetUser
-          Resource: "*"
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - s3:PutObject
+        - s3:GetObject
+        - cognito-idp:AdminSetUserPassword
+        - cognito-idp:AdminUpdateUserAttributes
+        - cognito-idp:GetUser
+      Resource: "*"
 
 functions:
   ProductsAPI:

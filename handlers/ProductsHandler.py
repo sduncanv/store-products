@@ -24,7 +24,8 @@ def types_products(event, context):
 
     methods = {
         "POST": products_class.create_type_product,
-        "GET": products_class.get_type_product,
+        "GET": products_class.descargar,
+        # "GET": products_class.get_type_product,
         # "PUT": products_class.update_product,
     }
 

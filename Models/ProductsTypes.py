@@ -4,9 +4,9 @@ from sqlalchemy import String, Column, DateTime, Integer
 from Tools.Database.Conn import Base
 
 
-class TypesProductsModel(Base):
+class ProductsTypesModel(Base):
 
-    __tablename__ = 'types_products'
+    __tablename__ = 'products_types'
 
     type_product_id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)

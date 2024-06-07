@@ -13,6 +13,7 @@ class ProductsModel(Base):
     price = Column(Integer)
     type_product_id = Column(Integer)
     description = Column(String(250))
+    user_id = Column(Integer)
     active = Column(Integer, server_default=str(1))
     created_at = Column(DateTime, default=current_timestamp())
     updated_at = Column(
@@ -26,4 +27,5 @@ class ProductsModel(Base):
         self.price = kwargs['price']
         self.type_product_id = kwargs['type_product_id']
         self.description = kwargs['description']
+        self.user_id = kwargs['user_id']
         self.active = kwargs['active']
