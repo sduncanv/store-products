@@ -1,28 +1,24 @@
 from os import getenv
-import boto3
 import base64
-from botocore.exceptions import ClientError
 from sqlalchemy import select, insert, and_
 
-# from Users.Classes.Users import Users
+from Users.Classes.Users import Users
 from Tools.Database.Conn import Database
 from Tools.Utils.Helpers import get_input_data
 from Tools.Classes.BasicTools import BasicTools
 from Tools.Classes.AwsTools import AwsTools
 from Tools.Classes.CustomError import CustomError
-from Models.Products import ProductsModel
-from Models.ProductsTypes import ProductsTypesModel
-from Models.ProductsFiles import ProductsFilesModel
+from Products.Models.Products import ProductsModel
+from Products.Models.ProductsTypes import ProductsTypesModel
+from Products.Models.ProductsFiles import ProductsFilesModel
 
 
 class Products:
 
     def __init__(self) -> None:
-        self.user_pool = getenv('USER_POOL')
-        self.client_id = getenv('CLIENT_ID')
         self.tools = BasicTools()
         self.db = Database()
-        # self.users = Users()
+        self.users = Users()
         self.aws_tools = AwsTools()
 
     def create_product(self, event):
@@ -59,13 +55,9 @@ class Products:
         if not is_valid['is_valid']:
             raise CustomError(is_valid['data'][0])
 
-        self.validate_type_product({
-            'type_product_id': type_product_id
-        })
+        self.validate_type_product({'type_product_id': type_product_id})
 
-        self.users.get_user_id(**{
-            'user_id': user_id
-        })
+        self.users.get_user_info({'user_id': user_id})
 
         statement = insert(ProductsModel).values(
             name=name,
@@ -76,7 +68,6 @@ class Products:
         )
 
         result_statement = self.db.insert_statement(statement)
-        # print(f'{result_statement} <---- result_statement')
 
         data_file = {
             'product_id': result_statement['product_id'],
@@ -85,23 +76,22 @@ class Products:
             'filename': filename
         }
 
-        # if file:
-        #     data_file.update({
-        #         'image': image,
-        #         'filename': filename
-        #     })
+        if file:
+            data_file.update({
+                'image': image,
+                'filename': filename
+            })
 
         result_insert = self.insert_images(**data_file)
-        print(f'{result_insert} <---- result_insert')
 
-        result_statement.update({"message": "Product was created."})
-        data = result_statement
+        if result_insert['statusCode'] == 200:
+            data = result_statement
+            status_code = 201
 
-        status_code = 200
+        else:
+            raise CustomError('Error al crear el producto')
 
-        return {
-            'statusCode': status_code, 'data': data
-        }
+        return {'statusCode': status_code, 'data': data}
 
     def get_product(self, event):
 
@@ -133,35 +123,30 @@ class Products:
         ).where(*conditions)
 
         result_statement = self.db.select_statement(statement)
-        print(f'{result_statement} ----- result_statement')
 
-        for start in result_statement:
+        # for start in result_statement:
 
-            if start['url'] is None:
-                continue
+        #     if start['url'] is None:
+        #         continue
 
-            s3_client = boto3.client('s3')
-            start['url'] = s3_client.generate_presigned_url(
-                ClientMethod='get_object',
-                Params={
-                    'Bucket': 'bucket-store-app',
-                    'Key': start['url']
-                },
-                ExpiresIn=7200
-            )
+        #     s3_client = boto3.client('s3')
+        #     start['url'] = s3_client.generate_presigned_url(
+        #         ClientMethod='get_object',
+        #         Params={
+        #             'Bucket': 'bucket-store-app',
+        #             'Key': start['url']
+        #         },
+        #         ExpiresIn=7200
+        #     )
 
         status_code = 200
         data = result_statement
 
         if not result_statement:
             status_code = 404
+            data = []
 
-        # status_code = 200
-        # data = ''
-
-        return {
-            'statusCode': status_code, 'data': data
-        }
+        return {'statusCode': status_code, 'data': data}
 
     def validate_type_product(self, kwargs):
 
@@ -178,7 +163,7 @@ class Products:
             return result_statement[0]
 
         raise CustomError(
-            'The specified product does not exist.'
+            'The specified product type does not exist.'
         )
 
     def create_type_product(self, event):
@@ -204,15 +189,16 @@ class Products:
 
         result_statement = self.db.insert_statement(statement)
 
-        result_statement.update({"message": "Type product was created."})
-        data = result_statement
+        if result_statement:
+            # result_statement.update({"message": "Type product was created."})
+            data = result_statement
+            status_code = 200
 
-        status_code = 200
-        # data = ''
+        else:
+            status_code = 400
+            data = ''
 
-        return {
-            'statusCode': status_code, 'data': data
-        }
+        return {'statusCode': status_code, 'data': data}
 
     def get_type_product(self, event):
 
@@ -230,22 +216,18 @@ class Products:
 
         result_statement = self.db.select_statement(statement)
 
-        if not result_statement:
-            raise CustomError(
-                'The specified type product does not exist.'
-            )
-
         status_code = 200
         data = result_statement
 
-        return {
-            'statusCode': status_code, 'data': data
-        }
+        if not result_statement:
+            status_code = 404
+            data = []
+
+        return {'statusCode': status_code, 'data': data}
 
     def insert_images(self, **kwargs):
 
         bucket_name = getenv('BUCKET_NAME')
-        print(bucket_name)
 
         file = base64.b64decode(kwargs['image'])
         filename = f"product-images/{kwargs['filename']}.png"
@@ -258,8 +240,6 @@ class Products:
             }
         )
 
-        print(upload_result)
-
         if upload_result['statusCode'] != 200:
             raise CustomError('Error al cargar imagen a S3.')
 
@@ -270,66 +250,43 @@ class Products:
             )
         )
 
-        print(result)
+        if result:
+            status_code = 200
+            data = result
 
-        # result.update({"message": "Product was created."})
-        # data = result
+        else:
+            status_code = 400
+            data = ''
 
-        status_code = 200
+        return {'statusCode': status_code, 'data': data}
 
-        return {
-            'statusCode': status_code, 'data': 'data'
-        }
+    # def descargar(self, event):
 
-    def upload_file(self, data, object_name=None):
+    #     s3_client = boto3.client('s3')
 
-        s3_client = boto3.client('s3')
+    #     try:
+    #         # response = s3_client.get_object(
+    #         #     Bucket='bucket-store-app',
+    #         #     Key='product-images/archivo2.png'
+    #         # )
 
-        try:
-            response = s3_client.put_object(
-                Body=data['file'],
-                Bucket=data['bucket_name'],
-                Key=data['filename']
-            )
-            print(f'{response} ....')
+    #         response = s3_client.generate_presigned_url(
+    #             ClientMethod='get_object',
+    #             Params={
+    #                 'Bucket': 'bucket-store-app',
+    #                 'Key': 'product-images/archivo2.png'
+    #             },
+    #             ExpiresIn=7200
+    #         )
 
-        except ClientError as e:
-            print(f'error: {e}')
-            raise CustomError(
-                f'Error: {e}'
-            )
+    #         print(f'{response} ....')
 
-        return {
-            'statusCode': 201, 'data': 'data'
-        }
+    #     except ClientError as e:
+    #         print(f'error: {e}')
+    #         raise CustomError(
+    #             f'Error: {e}'
+    #         )
 
-    def descargar(self, event):
-
-        s3_client = boto3.client('s3')
-
-        try:
-            # response = s3_client.get_object(
-            #     Bucket='bucket-store-app',
-            #     Key='product-images/archivo2.png'
-            # )
-
-            response = s3_client.generate_presigned_url(
-                ClientMethod='get_object',
-                Params={
-                    'Bucket': 'bucket-store-app',
-                    'Key': 'product-images/archivo2.png'
-                },
-                ExpiresIn=7200
-            )
-
-            print(f'{response} ....')
-
-        except ClientError as e:
-            print(f'error: {e}')
-            raise CustomError(
-                f'Error: {e}'
-            )
-
-        return {
-            'statusCode': 201, 'data': response
-        }
+    #     return {
+    #         'statusCode': 201, 'data': response
+    #     }

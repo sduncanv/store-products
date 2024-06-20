@@ -1,4 +1,4 @@
-from Classes.Products import Products
+from Products.Classes.Products import Products
 from Tools.Utils.Helpers import exception_decorator
 
 
@@ -10,7 +10,6 @@ def products(event, context):
     methods = {
         "POST": products_class.create_product,
         "GET": products_class.get_product,
-        # "PUT": products_class.update_product,
     }
 
     executed = methods.get(event['httpMethod'])
@@ -24,9 +23,7 @@ def types_products(event, context):
 
     methods = {
         "POST": products_class.create_type_product,
-        "GET": products_class.descargar,
-        # "GET": products_class.get_type_product,
-        # "PUT": products_class.update_product,
+        "GET": products_class.get_type_product,
     }
 
     executed = methods.get(event['httpMethod'])

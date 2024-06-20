@@ -1,2 +1,4 @@
+git+https://github.com/USERNAME/store-products.git@master#egg=store-products
 git+https://github.com/USERNAME/store-tools.git@master#egg=store-tools
 git+https://github.com/USERNAME/store-users.git@master#egg=store-users
+cryptography
