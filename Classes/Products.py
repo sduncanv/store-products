@@ -57,7 +57,10 @@ class Products:
 
         self.validate_type_product({'type_product_id': type_product_id})
 
-        self.users.get_user_info({'user_id': user_id})
+        data_user = self.users.get_user_info({'user_id': user_id})
+
+        if data_user['statusCode'] == 404:
+            raise CustomError('The specified user does not exist.')
 
         statement = insert(ProductsModel).values(
             name=name,
@@ -71,9 +74,7 @@ class Products:
 
         data_file = {
             'product_id': result_statement['product_id'],
-            'model': ProductsFilesModel,
-            'image': image,
-            'filename': filename
+            'model': ProductsFilesModel
         }
 
         if file:
@@ -86,7 +87,7 @@ class Products:
 
         if result_insert['statusCode'] == 200:
             data = result_statement
-            status_code = 201
+            status_code = 200
 
         else:
             raise CustomError('Error al crear el producto')
@@ -246,7 +247,7 @@ class Products:
         result = self.db.insert_statement(
             insert(kwargs['model']).values(
                 product_id=kwargs['product_id'],
-                url=filename,
+                url=filename
             )
         )
 
@@ -279,10 +280,7 @@ class Products:
     #             ExpiresIn=7200
     #         )
 
-    #         print(f'{response} ....')
-
     #     except ClientError as e:
-    #         print(f'error: {e}')
     #         raise CustomError(
     #             f'Error: {e}'
     #         )

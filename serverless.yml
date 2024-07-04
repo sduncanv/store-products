@@ -2,7 +2,7 @@ service: store-products
 frameworkVersion: '3'
 
 plugins:
-  - serverless-offline
+  # - serverless-offline
   - serverless-python-requirements
 
 useDotenv: true
@@ -15,6 +15,9 @@ package:
     - "Models/**"
 
 custom:
+  # serverless-offline:
+  #   httpPort: 3001
+
   globalTimeOut: 30
 
   cors:
@@ -80,6 +83,7 @@ functions:
   ProductsAPI:
     name: Products-Api
     handler: handlers/ProductsHandler.products
+    timeout: ${self:custom.globalTimeOut}
     events:
       - http:
           path: /products
@@ -93,6 +97,7 @@ functions:
   TypesProductsAPI:
     name: Types-Products-Api
     handler: handlers/ProductsHandler.types_products
+    timeout: ${self:custom.globalTimeOut}
     events:
       - http:
           path: /types_products
