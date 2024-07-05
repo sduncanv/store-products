@@ -1,4 +1,4 @@
-service: store-products
+service: store-app
 frameworkVersion: '3'
 
 plugins:
