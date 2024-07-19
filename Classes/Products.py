@@ -2,6 +2,11 @@ from os import getenv
 import base64
 from sqlalchemy import select, insert, and_
 
+import cloudinary
+from cloudinary import CloudinaryImage
+import cloudinary.uploader
+import cloudinary.api
+
 from Users.Classes.Users import Users
 from Tools.Database.Conn import Database
 from Tools.Utils.Helpers import get_input_data
@@ -70,6 +75,7 @@ class Products:
             user_id=user_id
         )
 
+        print('---------------------')
         result_statement = self.db.insert_statement(statement)
 
         data_file = {
@@ -83,7 +89,9 @@ class Products:
                 'filename': filename
             })
 
-        result_insert = self.insert_images(**data_file)
+        # result_insert = self.insert_images(**data_file)
+        result_insert = self.upload_image(**data_file)
+        print(f'{result_insert} <----')
 
         if result_insert['statusCode'] == 200:
             data = result_statement
@@ -113,7 +121,8 @@ class Products:
 
         statement = select(
             ProductsModel,
-            ProductsFilesModel.url
+            ProductsFilesModel.url,
+            ProductsTypesModel.name.label('product_type_name')
         ).join(
             ProductsFilesModel,
             and_(
@@ -121,6 +130,12 @@ class Products:
                 ProductsFilesModel.active == 1
             ),
             isouter=True
+        ).join(
+            ProductsTypesModel,
+            and_(
+                ProductsTypesModel.type_product_id == ProductsModel.type_product_id,
+                ProductsTypesModel.active == 1
+            )
         ).where(*conditions)
 
         result_statement = self.db.select_statement(statement)
@@ -261,30 +276,39 @@ class Products:
 
         return {'statusCode': status_code, 'data': data}
 
-    # def descargar(self, event):
+    def upload_image(self, **data):
 
-    #     s3_client = boto3.client('s3')
+        try:
+            cloudinary.config(
+                cloud_name=getenv('CLOUD_NAME'),
+                api_key=getenv('API_KEY'),
+                api_secret=getenv('API_SECRET'),
+                secure=True
+            )
 
-    #     try:
-    #         # response = s3_client.get_object(
-    #         #     Bucket='bucket-store-app',
-    #         #     Key='product-images/archivo2.png'
-    #         # )
+            base64_image = f"data:image/jpg;base64,{data['image']}"
 
-    #         response = s3_client.generate_presigned_url(
-    #             ClientMethod='get_object',
-    #             Params={
-    #                 'Bucket': 'bucket-store-app',
-    #                 'Key': 'product-images/archivo2.png'
-    #             },
-    #             ExpiresIn=7200
-    #         )
+            cloudinary.uploader.upload(
+                base64_image,
+                public_id=data['filename'],
+                unique_filename=False,
+                overwrite=True
+            )
 
-    #     except ClientError as e:
-    #         raise CustomError(
-    #             f'Error: {e}'
-    #         )
+            url = CloudinaryImage(data['filename']).build_url()
 
-    #     return {
-    #         'statusCode': 201, 'data': response
-    #     }
+            result = self.db.insert_statement(
+                insert(data['model']).values(
+                    product_id=data['product_id'],
+                    url=url
+                )
+            )
+
+            status_code = 200
+            data = result
+
+        except cloudinary.exceptions.Error as e:
+            status_code = 400
+            data = str(e)
+
+        return {'statusCode': status_code, 'data': data}
