@@ -15,9 +15,6 @@ package:
     - "Models/**"
 
 custom:
-  # serverless-offline:
-  #   httpPort: 3001
-
   globalTimeOut: 30
 
   cors:
@@ -63,6 +60,9 @@ provider:
     DB_HOST: ${env:DB_HOST}
     USER_POOL: ${env:USER_POOL}
     CLIENT_ID: ${env:CLIENT_ID}
+    CLOUD_NAME: ${env:CLOUD_NAME}
+    API_KEY: ${env:API_KEY}
+    API_SECRET: ${env:API_SECRET}
 
   layers:
     - Ref: PythonRequirementsLambdaLayer

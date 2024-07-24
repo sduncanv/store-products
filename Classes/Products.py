@@ -1,7 +1,6 @@
-from os import getenv
 import base64
+from os import getenv
 from sqlalchemy import select, insert, and_
-
 import cloudinary
 from cloudinary import CloudinaryImage
 import cloudinary.uploader
@@ -22,9 +21,12 @@ class Products:
 
     def __init__(self) -> None:
         self.tools = BasicTools()
-        self.db = Database()
         self.users = Users()
         self.aws_tools = AwsTools()
+        self.db = Database(
+            getenv('DB_NAME'), getenv('DB_HOST'),
+            getenv('DB_USER'), getenv('DB_PASSWORD')
+        )
 
     def create_product(self, event):
 
@@ -75,7 +77,6 @@ class Products:
             user_id=user_id
         )
 
-        print('---------------------')
         result_statement = self.db.insert_statement(statement)
 
         data_file = {
@@ -91,7 +92,6 @@ class Products:
 
         # result_insert = self.insert_images(**data_file)
         result_insert = self.upload_image(**data_file)
-        print(f'{result_insert} <----')
 
         if result_insert['statusCode'] == 200:
             data = result_statement
@@ -106,9 +106,7 @@ class Products:
 
         input_data = get_input_data(event)
 
-        conditions = [
-            ProductsModel.active == 1
-        ]
+        conditions = [ProductsModel.active == 1]
 
         product_id = input_data.get('product_id', '')
         user_id = input_data.get('user_id', '')
@@ -164,7 +162,7 @@ class Products:
 
         return {'statusCode': status_code, 'data': data}
 
-    def validate_type_product(self, kwargs):
+    def validate_type_product(self, kwargs: dict):
 
         conditions = {'active': 1}
 
