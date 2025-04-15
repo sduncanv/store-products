@@ -5,7 +5,7 @@ from Tools.Utils.Helpers import exception_decorator
 @exception_decorator
 def products(event, context):
 
-    products_class = Products()
+    products_class = Products()  #
 
     methods = {
         "POST": products_class.create_product,
