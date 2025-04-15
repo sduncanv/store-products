@@ -1,4 +1,4 @@
-from Products.Classes.Products import Products
+from Classes.Products import Products
 from Tools.Utils.Helpers import exception_decorator
 
 

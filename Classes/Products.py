@@ -1,5 +1,5 @@
+import os
 import base64
-from os import getenv
 from sqlalchemy import select, insert, and_
 import cloudinary
 from cloudinary import CloudinaryImage
@@ -12,9 +12,9 @@ from Tools.Utils.Helpers import get_input_data
 from Tools.Classes.BasicTools import BasicTools
 from Tools.Classes.AwsTools import AwsTools
 from Tools.Classes.CustomError import CustomError
-from Products.Models.Products import ProductsModel
-from Products.Models.ProductsTypes import ProductsTypesModel
-from Products.Models.ProductsFiles import ProductsFilesModel
+from Models.Products import ProductsModel
+from Models.ProductsTypes import ProductsTypesModel
+from Models.ProductsFiles import ProductsFilesModel
 
 
 class Products:
@@ -24,8 +24,10 @@ class Products:
         self.users = Users()
         self.aws_tools = AwsTools()
         self.db = Database(
-            getenv('DB_NAME'), getenv('DB_HOST'),
-            getenv('DB_USER'), getenv('DB_PASSWORD')
+            db=os.getenv('DATABASE_NAME'),
+            host=os.getenv('DATABASE_HOST'),
+            user=os.getenv('DATABASE_USER'),
+            password=os.getenv('DATABASE_PASSWORD')
         )
 
     def create_product(self, event):
@@ -194,7 +196,7 @@ class Products:
 
         is_valid = self.tools.validate_input_data(values)
         if not is_valid['is_valid']:
-            raise CustomError(is_valid['data'][0])
+            raise CustomError(is_valid['errors'][0])
 
         statement = insert(ProductsTypesModel).values(
             name=name,
@@ -202,15 +204,15 @@ class Products:
         )
 
         result_statement = self.db.insert_statement(statement)
+        print(f'result_statement: {result_statement}')
 
         if result_statement:
-            # result_statement.update({"message": "Type product was created."})
             data = result_statement
             status_code = 200
 
         else:
             status_code = 400
-            data = ''
+            data = 'No se pudo crear el tipo de producto'
 
         return {'statusCode': status_code, 'data': data}
 
@@ -241,7 +243,7 @@ class Products:
 
     def insert_images(self, **kwargs):
 
-        bucket_name = getenv('BUCKET_NAME')
+        bucket_name = os.getenv('BUCKET_NAME')
 
         file = base64.b64decode(kwargs['image'])
         filename = f"product-images/{kwargs['filename']}.png"
@@ -278,9 +280,9 @@ class Products:
 
         try:
             cloudinary.config(
-                cloud_name=getenv('CLOUD_NAME'),
-                api_key=getenv('API_KEY'),
-                api_secret=getenv('API_SECRET'),
+                cloud_name=os.getenv('CLOUD_NAME'),
+                api_key=os.getenv('API_KEY'),
+                api_secret=os.getenv('API_SECRET'),
                 secure=True
             )
 

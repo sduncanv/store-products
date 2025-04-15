@@ -2,7 +2,7 @@ service: store-app
 frameworkVersion: '4'
 
 plugins:
-  # - serverless-offline
+  - serverless-offline
   - serverless-python-requirements
 
 useDotenv: true
