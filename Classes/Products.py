@@ -1,10 +1,9 @@
 import os
 import base64
-from sqlalchemy import select, insert, and_
 import cloudinary
-from cloudinary import CloudinaryImage
 import cloudinary.uploader
-import cloudinary.api
+from cloudinary import CloudinaryImage
+from sqlalchemy import select, insert, and_
 
 from Users.Classes.Users import Users
 from Tools.Database.Conn import Database
@@ -12,9 +11,9 @@ from Tools.Utils.Helpers import get_input_data
 from Tools.Classes.BasicTools import BasicTools
 from Tools.Classes.AwsTools import AwsTools
 from Tools.Classes.CustomError import CustomError
-from Models.Products import ProductsModel
-from Models.ProductsTypes import ProductsTypesModel
-from Models.ProductsFiles import ProductsFilesModel
+from Products.Models.Products import ProductsModel
+from Products.Models.ProductsTypes import ProductsTypesModel
+from Products.Models.ProductsFiles import ProductsFilesModel
 
 
 class Products:
@@ -62,14 +61,16 @@ class Products:
 
         is_valid = self.tools.validate_input_data(values)
         if not is_valid['is_valid']:
-            raise CustomError(is_valid['data'][0])
+            raise CustomError(is_valid['errors'][0])
 
         self.validate_type_product({'type_product_id': type_product_id})
 
         data_user = self.users.get_user_info({'user_id': user_id})
 
         if data_user['statusCode'] == 404:
-            raise CustomError('The specified user does not exist.')
+            raise CustomError(
+                message='The specified user does not exist.', status_code=400
+            )
 
         statement = insert(ProductsModel).values(
             name=name,
@@ -92,7 +93,10 @@ class Products:
                 'filename': filename
             })
 
+        # This line is for uploading images to S3:
         # result_insert = self.insert_images(**data_file)
+
+        # This line is for uploading images to Cloudinary:
         result_insert = self.upload_image(**data_file)
 
         if result_insert['statusCode'] == 200:
@@ -204,7 +208,6 @@ class Products:
         )
 
         result_statement = self.db.insert_statement(statement)
-        print(f'result_statement: {result_statement}')
 
         if result_statement:
             data = result_statement

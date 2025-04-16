@@ -1,30 +1,30 @@
-from Classes.Products import Products
+from Products.Classes.Products import Products
 from Tools.Utils.Helpers import exception_decorator
 
 
 @exception_decorator
 def products(event, context):
 
-    products_class = Products()  #
+    method = event['httpMethod']
+    products_class = Products()
 
-    methods = {
+    functions = {
         "POST": products_class.create_product,
         "GET": products_class.get_product,
     }
 
-    executed = methods.get(event['httpMethod'])
-    return executed(event)
+    return functions[method](event)
 
 
 @exception_decorator
 def types_products(event, context):
 
+    method = event['httpMethod']
     products_class = Products()
 
-    methods = {
+    functions = {
         "POST": products_class.create_type_product,
         "GET": products_class.get_type_product,
     }
 
-    executed = methods.get(event['httpMethod'])
-    return executed(event)
+    return functions[method](event)
