@@ -1,3 +1,3 @@
-git+https://TOKEN@github.com/REPOSITORY_USER/store-users.git@refactor1_users#egg=store-users
-git+https://TOKEN@github.com/REPOSITORY_USER/store-products.git@refactor1_products#egg=store-products
-git+https://TOKEN@github.com/REPOSITORY_USER/store-tools.git@refactorv1#egg=store-tools
+git+https://TOKEN@github.com/REPOSITORY_USER/store-users.git@master#egg=store-users
+git+https://TOKEN@github.com/REPOSITORY_USER/store-products.git@master#egg=store-products
+git+https://TOKEN@github.com/REPOSITORY_USER/store-tools.git@master#egg=store-tools
