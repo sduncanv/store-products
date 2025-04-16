@@ -1,10 +1,9 @@
+import os
 import base64
-from os import getenv
-from sqlalchemy import select, insert, and_
 import cloudinary
-from cloudinary import CloudinaryImage
 import cloudinary.uploader
-import cloudinary.api
+from cloudinary import CloudinaryImage
+from sqlalchemy import select, insert, and_
 
 from Users.Classes.Users import Users
 from Tools.Database.Conn import Database
@@ -24,8 +23,10 @@ class Products:
         self.users = Users()
         self.aws_tools = AwsTools()
         self.db = Database(
-            getenv('DB_NAME'), getenv('DB_HOST'),
-            getenv('DB_USER'), getenv('DB_PASSWORD')
+            db=os.getenv('DATABASE_NAME'),
+            host=os.getenv('DATABASE_HOST'),
+            user=os.getenv('DATABASE_USER'),
+            password=os.getenv('DATABASE_PASSWORD')
         )
 
     def create_product(self, event):
@@ -60,14 +61,16 @@ class Products:
 
         is_valid = self.tools.validate_input_data(values)
         if not is_valid['is_valid']:
-            raise CustomError(is_valid['data'][0])
+            raise CustomError(is_valid['errors'][0])
 
         self.validate_type_product({'type_product_id': type_product_id})
 
         data_user = self.users.get_user_info({'user_id': user_id})
 
         if data_user['statusCode'] == 404:
-            raise CustomError('The specified user does not exist.')
+            raise CustomError(
+                message='The specified user does not exist.', status_code=400
+            )
 
         statement = insert(ProductsModel).values(
             name=name,
@@ -90,7 +93,10 @@ class Products:
                 'filename': filename
             })
 
+        # This line is for uploading images to S3:
         # result_insert = self.insert_images(**data_file)
+
+        # This line is for uploading images to Cloudinary:
         result_insert = self.upload_image(**data_file)
 
         if result_insert['statusCode'] == 200:
@@ -194,7 +200,7 @@ class Products:
 
         is_valid = self.tools.validate_input_data(values)
         if not is_valid['is_valid']:
-            raise CustomError(is_valid['data'][0])
+            raise CustomError(is_valid['errors'][0])
 
         statement = insert(ProductsTypesModel).values(
             name=name,
@@ -204,13 +210,12 @@ class Products:
         result_statement = self.db.insert_statement(statement)
 
         if result_statement:
-            # result_statement.update({"message": "Type product was created."})
             data = result_statement
             status_code = 200
 
         else:
             status_code = 400
-            data = ''
+            data = 'No se pudo crear el tipo de producto'
 
         return {'statusCode': status_code, 'data': data}
 
@@ -241,7 +246,7 @@ class Products:
 
     def insert_images(self, **kwargs):
 
-        bucket_name = getenv('BUCKET_NAME')
+        bucket_name = os.getenv('BUCKET_NAME')
 
         file = base64.b64decode(kwargs['image'])
         filename = f"product-images/{kwargs['filename']}.png"
@@ -278,9 +283,9 @@ class Products:
 
         try:
             cloudinary.config(
-                cloud_name=getenv('CLOUD_NAME'),
-                api_key=getenv('API_KEY'),
-                api_secret=getenv('API_SECRET'),
+                cloud_name=os.getenv('CLOUD_NAME'),
+                api_key=os.getenv('API_KEY'),
+                api_secret=os.getenv('API_SECRET'),
                 secure=True
             )
 

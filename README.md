@@ -1,101 +1,189 @@
-<!--
-title: 'AWS Simple HTTP Endpoint example in Python'
-description: 'This template demonstrates how to make a simple HTTP API with Python running on AWS Lambda and API Gateway using the Serverless Framework.'
-layout: Doc
-framework: v3
-platform: AWS
-language: python
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
--->
+# store-products
+Repositorio encargado de la gestión de **productos** en la aplicación principal.
 
-# Serverless Framework Python HTTP API on AWS
+Este repositorio maneja todo lo relacionado con productos: creación, lectura, actualización y eliminación de productos, tipos y archivos relacionados. Forma parte de un ecosistema de microservicios junto a:
 
-This template demonstrates how to make a simple HTTP API with Python running on AWS Lambda and API Gateway using the Serverless Framework.
+- [`store-users`](https://github.com/sduncanv/store-users)
+- [`store-tools`](https://github.com/sduncanv/store-tools)
 
-This template does not include any kind of persistence (database). For more advanced examples, check out the [serverless/examples repository](https://github.com/serverless/examples/)  which includes DynamoDB, Mongo, Fauna and other examples.
+## 🧰 Tecnologías propias del repositorio
 
-## Usage
+- Cloudinary
 
-### Deployment
 
+## Project Structure
 ```
-$ serverless deploy
-```
-
-After deploying, you should see output similar to:
-
-```bash
-Deploying aws-python-http-api-project to stage dev (us-east-1)
-
-✔ Service deployed to stack aws-python-http-api-project-dev (140s)
-
-endpoint: GET - https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/
-functions:
-  hello: aws-python-http-api-project-dev-hello (2.3 kB)
+.
+├── Classes
+│   ├── Products.py
+│   ├── __init__.py
+├── Models
+│   ├── Products.py
+│   ├── ProductsFiles.py
+│   ├── ProductsTypes.py
+│   ├── __init__.py
+├── README.md
+├── handlers
+│   ├── ProductsHandler.py
+├── .env
+├── .gitignore
+├── locked-requirements.txt
+├── pyproject.toml
+├── script.py
+├── serverless.yml
+├── setup.py
 ```
 
-_Note_: In current form, after deployment, your API is public and can be invoked by anyone. For production deployments, you might want to configure an authorizer. For details on how to do that, refer to [http event docs](https://www.serverless.com/framework/docs/providers/aws/events/apigateway/).
 
-### Invocation
 
-After successful deployment, you can call the created application via HTTP:
+## ⚙️ Setup and Installation
 
-```bash
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/
-```
+1. **Create and activate a virtual environment**
+  ```sh
+    python3 -m venv venv
+    source venv/bin/activate
+  ```
 
-Which should result in response similar to the following (removed `input` content for brevity):
+2. **Make sure you have your variables in .env with your credentials for: database, cloudinary**
+
+3. **Create a requirements.txt**
+  ```sh
+    python3 script.py
+  ```
+
+4. **Install dependencies**
+  ```sh
+    pip install -r requirements.txt
+  ```
+
+5. **Run the application**
+  ```sh
+    serverless offline
+  ```
+The server will start and provide an IP address (e.g., `http://127.0.0.1:3003`).
+
+## 🔌 Funciones
+
+### 1. Create a type product
+
+**endpoint:** `POST /types_products`  
+**description:** Crea un nuevo tipo de producto.
+
+#### Request body (JSON)
 
 ```json
 {
-  "message": "Go Serverless v3.0! Your function executed successfully!",
-  "input": {
-    ...
+  "name": "string",
+  "description": "string"
+}
+```
+#### Response
+```json
+{
+  "statusCode": 200,
+  "message": "Ok",
+  "data": {
+    "type_product_id": 1
   }
 }
 ```
 
-### Local development
+### 2. Get a type product
 
-You can invoke your function locally by using the following command:
+**endpoint:** `POST /types_products`  
+**description:** Create a type product.
 
-```bash
-serverless invoke local --function hello
+#### Params (Optionals)
+
+```json
+type_product_id: int
 ```
-
-Which should result in response similar to the following:
-
-```
+#### Response
+```json
 {
   "statusCode": 200,
-  "body": "{\n  \"message\": \"Go Serverless v3.0! Your function executed successfully!\",\n  \"input\": \"\"\n}"
+  "message": "Ok",
+  "data": [
+    {
+      "type_product_id": 1,
+      "name": "Electrónica",
+      "description": "Productos de tipo electronica.",
+      "active": 1,
+      "created_at": "2025-04-14 22:14:21",
+      "updated_at": "2025-04-14 22:14:21"
+    },
+    {
+      "type_product_id": 2,
+      "name": "Calzado",
+      "description": "Productos de tipo calzado.",
+      "active": 1,
+      "created_at": "2025-04-15 16:36:48",
+      "updated_at": "2025-04-15 16:36:48"
+    }
+  ]
 }
 ```
 
-Alternatively, it is also possible to emulate API Gateway and Lambda locally by using `serverless-offline` plugin. In order to do that, execute the following command:
+### 3. Create a product
 
-```bash
-serverless plugin install -n serverless-offline
+**endpoint:** `POST /products`  
+**description:** Crea un nuevo producto.
+
+#### Request body (JSON)
+
+```json
+{
+  "name": "string",
+  "price": int,
+  "type_product_id": int,
+  "description": "string",
+  "user_id": int,
+  "file": {
+    "filename": "string",
+    "image": "string"
+  }
+}
+```
+#### Response (JSON)
+```json
+{
+  "statusCode": 200,
+  "message": "Ok",
+  "data": {
+    "product_id": 1
+  }
+}
 ```
 
-It will add the `serverless-offline` plugin to `devDependencies` in `package.json` file as well as will add it to `plugins` in `serverless.yml`.
+### 4. Get a product
 
-After installation, you can start local emulation with:
+**endpoint:** `GET /products`  
+**description:** Get a product or all products.
 
+#### Params (Optionals)
+
+```json
+product_id: int
 ```
-serverless offline
+#### Response
+```json
+{
+  "statusCode": 200,
+  "message": "Ok",
+  "data": [
+    {
+      "product_id": 1,
+      "name": "Iphone",
+      "price": 1000,
+      "type_product_id": 1,
+      "description": "Celular Iphone.",
+      "user_id": 1,
+      "active": 1,
+      "created_at": "2025-04-15 17:05:32",
+      "updated_at": "2025-04-15 17:05:32",
+      "url": "https://res.cloudinary.com/cloudname/image/upload/filename",
+      "product_type_name": "Electrónica"
+    }
+  ]
+}
 ```
-
-To learn more about the capabilities of `serverless-offline`, please refer to its [GitHub repository](https://github.com/dherault/serverless-offline).
-
-### Bundling dependencies
-
-In case you would like to include 3rd party dependencies, you will need to use a plugin called `serverless-python-requirements`. You can set it up by running the following command:
-
-```bash
-serverless plugin install -n serverless-python-requirements
-```
-
-Running the above will automatically add `serverless-python-requirements` to `plugins` section in your `serverless.yml` file and add it as a `devDependency` to `package.json` file. The `package.json` file will be automatically created if it doesn't exist beforehand. Now you will be able to add your dependencies to `requirements.txt` file (`Pipfile` and `pyproject.toml` is also supported but requires additional configuration) and they will be automatically injected to Lambda package during build process. For more details about the plugin's configuration, please refer to [official documentation](https://github.com/UnitedIncome/serverless-python-requirements).
