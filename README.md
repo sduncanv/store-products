@@ -64,12 +64,72 @@ The server will start and provide an IP address (e.g., `http://127.0.0.1:3003`).
 
 ## 🔌 Funciones
 
-### 1. Create a product
+### 1. Create a type product
+
+**endpoint:** `POST /types_products`  
+**description:** Crea un nuevo tipo de producto.
+
+#### Request body (JSON)
+
+```json
+{
+  "name": "string",
+  "description": "string"
+}
+```
+#### Response
+```json
+{
+  "statusCode": 200,
+  "message": "Ok",
+  "data": {
+    "type_product_id": 1
+  }
+}
+```
+
+### 2. Get a type product
+
+**endpoint:** `POST /types_products`  
+**description:** Create a type product.
+
+#### Params (Optionals)
+
+```json
+type_product_id: int
+```
+#### Response
+```json
+{
+  "statusCode": 200,
+  "message": "Ok",
+  "data": [
+    {
+      "type_product_id": 1,
+      "name": "Electrónica",
+      "description": "Productos de tipo electronica.",
+      "active": 1,
+      "created_at": "2025-04-14 22:14:21",
+      "updated_at": "2025-04-14 22:14:21"
+    },
+    {
+      "type_product_id": 2,
+      "name": "Calzado",
+      "description": "Productos de tipo calzado.",
+      "active": 1,
+      "created_at": "2025-04-15 16:36:48",
+      "updated_at": "2025-04-15 16:36:48"
+    }
+  ]
+}
+```
+
+### 3. Create a product
 
 **endpoint:** `POST /products`  
 **description:** Crea un nuevo producto.
 
-#### Request Body (JSON)
+#### Request body (JSON)
 
 ```json
 {
@@ -90,7 +150,40 @@ The server will start and provide an IP address (e.g., `http://127.0.0.1:3003`).
   "statusCode": 200,
   "message": "Ok",
   "data": {
-      "product_id": 1
+    "product_id": 1
   }
+}
+```
+
+### 4. Get a product
+
+**endpoint:** `GET /products`  
+**description:** Get a product or all products.
+
+#### Params (Optionals)
+
+```json
+product_id: int
+```
+#### Response
+```json
+{
+  "statusCode": 200,
+  "message": "Ok",
+  "data": [
+    {
+      "product_id": 1,
+      "name": "Iphone",
+      "price": 1000,
+      "type_product_id": 1,
+      "description": "Celular Iphone.",
+      "user_id": 1,
+      "active": 1,
+      "created_at": "2025-04-15 17:05:32",
+      "updated_at": "2025-04-15 17:05:32",
+      "url": "https://res.cloudinary.com/cloudname/image/upload/filename",
+      "product_type_name": "Electrónica"
+    }
+  ]
 }
 ```
