@@ -6,6 +6,7 @@ from cloudinary import CloudinaryImage
 from sqlalchemy import select, insert, and_
 
 from Users.Classes.Users import Users
+from Users.Models.Users import UserModel
 from Tools.Database.Conn import Database
 from Tools.Utils.Helpers import get_input_data
 from Tools.Classes.BasicTools import BasicTools
@@ -118,7 +119,7 @@ class Products:
         user_id = input_data.get('user_id', '')
 
         if product_id:
-            conditions.append(ProductsModel.product_id == product_id,)
+            conditions.append(ProductsModel.product_id == product_id)
 
         if user_id:
             conditions.append(ProductsModel.user_id == user_id)
@@ -126,7 +127,10 @@ class Products:
         statement = select(
             ProductsModel,
             ProductsFilesModel.url,
-            ProductsTypesModel.name.label('product_type_name')
+            ProductsTypesModel.name.label('product_type_name'),
+            UserModel.username,
+            UserModel.name,
+            UserModel.phone_number,
         ).join(
             ProductsFilesModel,
             and_(
@@ -139,6 +143,12 @@ class Products:
             and_(
                 ProductsTypesModel.type_product_id == ProductsModel.type_product_id,
                 ProductsTypesModel.active == 1
+            )
+        ).join(
+            UserModel,
+            and_(
+                UserModel.user_id == ProductsModel.user_id,
+                UserModel.active == 1
             )
         ).where(*conditions)
 

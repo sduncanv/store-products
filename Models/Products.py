@@ -1,5 +1,5 @@
 from sqlalchemy.sql.functions import current_timestamp
-from sqlalchemy import String, Column, DateTime, Integer
+from sqlalchemy import String, Column, DateTime, Integer, Text
 
 from Tools.Database.Conn import Base
 
@@ -12,7 +12,7 @@ class ProductsModel(Base):
     name = Column(String(100), nullable=False)
     price = Column(Integer)
     type_product_id = Column(Integer)
-    description = Column(String(250))
+    description = Column(Text)
     user_id = Column(Integer)
     active = Column(Integer, server_default=str(1))
     created_at = Column(DateTime, default=current_timestamp())
